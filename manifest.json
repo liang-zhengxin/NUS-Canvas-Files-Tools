@@ -1,0 +1,17 @@
+{
+    "manifest_version": 3,
+    "name": "NUS Canvas Files Tools",
+    "description": "LumiNUS used to have a feature that allow us to download files not yet downloaded. This chrome extension add this functionality into Canvas Files",
+    "version": "1.0",
+    "icons": {
+        "128": "/images/icon-128x128.png"
+    },
+    "host_permissions": ["https://canvas.nus.edu.sg/*"],
+    "action": {
+        "default_title": "Click to open download page"
+    },
+    "permissions": ["storage","webRequest","tabs"],
+    "background": { 
+        "service_worker": "background.js"
+    }
+}
