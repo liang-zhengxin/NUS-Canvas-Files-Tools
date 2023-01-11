@@ -4,6 +4,7 @@
 
 // Global Variables
 var cID // Course ID
+var modCode
 var file = new Map(); // Map { fileId (String) : File Object (Map) }
 var debug = false; // Debugging Flag
 
@@ -38,7 +39,7 @@ function canvasAPI () {
     // Get details of Course
     fetch("https://canvas.nus.edu.sg/api/v1/courses/"+cID, requestOptions)
     .then(response => response.json())
-    .then(result => {if (debug) console.log(result.name); document.getElementById("courseName").innerHTML = result.name;}) // Show course name in HTML
+    .then(result => {if (debug) console.log(result.name); document.getElementById("courseName").innerHTML = result.name; modCode = result.course_code;}) // Show course name in HTML
     .catch(error => console.log('error', error));
 
     // Get files of Course. Last 100 files sorted based on their updated time in descending order.
@@ -57,6 +58,7 @@ function getFile(result) {
             if (!file.has(r.id.toString())) { // Not in local storage, add into local storage
                 const f = new Map();
                 f.set("filename", r.filename)
+                f.set("display_name", r.display_name)
                 f.set("id", r.id)
                 f.set("updated_at", r.updated_at)
                 f.set("url", r.url)
@@ -68,12 +70,14 @@ function getFile(result) {
                 const f = file.get(r.id.toString()); // Get data from local storage and compare. Update only if newer file on Canvas
                 if ((Date.parse(r.updated_at)-Date.parse(f.get('updated_at')))> 0) {
                     f.set("filename", r.filename)
+                    f.set("display_name", r.display_name)
                     f.set("id", r.id)
                     f.set("updated_at", r.updated_at)
                     f.set("url", r.url)
                     f.set("uuid", r.uuid)
                     f.set("downloaded",false)
                 }
+                f.set("display_name", r.display_name) // Temporarily fixed to add file display name into existing file local storage. WILL BE DEPRECIATED IN LATER VERSIONS
             }
         }
     }
@@ -99,14 +103,21 @@ function buildTable() {
             const d = new Date(Date.parse(f.get("updated_at")))  // Parse the date into UNIX time
             if (debug) console.log(d.toLocaleString());
             const para = document.createElement("li"); // Create A List element
-            const node = document.createTextNode("  "+f.get("filename")); // Add the file name into the list
+            const node = document.createTextNode("  "+f.get("display_name")); // Add the file display name into the list
             const time = document.createTextNode(" "+d.toLocaleString()); // Add the updated date into the same row
             const link = document.createElement("a"); // Create a Download button and a onClick eventListener to call download(fileId (String)) when clicked
             link.href = f.get("url");
             link.innerHTML = "Download"
             link.addEventListener('click', function() {download(f.get('id').toString())})
+
+            const link2 = document.createElement("a"); // Create a Mark As Downloaded button and a onClick evntListener to call markAsDownloaded(filedId (String)) when clicked
+            link2.href = "#";
+            link2.innerHTML = "Mark As Downloaded";
+            link2.addEventListener('click', function() {markAsDownloaded(f.get('id').toString())})
             
             para.appendChild(link);
+            para.appendChild(document.createTextNode(" "));
+            para.appendChild(link2);
             para.appendChild(time);
             para.appendChild(node);
             element.appendChild(para); // Add to HTML Table element
@@ -127,6 +138,17 @@ function buildTable() {
     }
     localStorage.setItem(cID,JSON.stringify(Object.fromEntries(fileString))) // Converting the Map of file object string into JSON String
     if (debug) console.log(Object.fromEntries(file))
+
+    //Saving file database into Chrome local storage
+    const cID_CS = 'C' + cID; // Appending C to course ID as key to differentiate the keys in localStorage and Chrome Storage
+    chrome.storage.local.set({[cID_CS]: JSON.stringify(Object.fromEntries(fileString))}, () => {
+        if (chrome.runtime.lastError) {
+            console.log('File database failed to save into Chrome Storage')
+        }
+        else {
+            console.log("File database saved into Chrome Storage")
+        }
+    });
 }
 
 
@@ -141,12 +163,47 @@ function download(fileId) {
     localStorage.setItem(cID,JSON.stringify(Object.fromEntries(fileString)))
     console.log('courseId '+cID+' files data are saved into local storage');
 
+    //Saving file database into Chrome local storage
+    const cID_CS = 'C' + cID; // Appending C to course ID as key to differentiate the keys in localStorage and Chrome Storage
+    chrome.storage.local.set({[cID_CS]: JSON.stringify(Object.fromEntries(fileString))}, () => {
+        if (chrome.runtime.lastError) {
+            console.log('File database failed to save into Chrome Storage')
+        }
+        else {
+            console.log("File database saved into Chrome Storage")
+        }
+    });
 }
 
+function markAsDownloaded(fileId) {
+    file.get(fileId).set("downloaded",true); // Update the file downloaded flag
+
+    let fileString = new Map()
+    for (const f of file) {
+        fileString.set(f[0],JSON.stringify(Object.fromEntries(f[1])))
+    }
+    localStorage.setItem(cID,JSON.stringify(Object.fromEntries(fileString)))
+    console.log('courseId '+cID+' files data are saved into local storage');
+
+    //Saving file database into Chrome local storage
+    const cID_CS = 'C' + cID; // Appending C to course ID as key to differentiate the keys in localStorage and Chrome Storage
+    chrome.storage.local.set({[cID_CS]: JSON.stringify(Object.fromEntries(fileString))}, () => {
+        if (chrome.runtime.lastError) {
+            console.log('File database failed to save into Chrome Storage')
+        }
+        else {
+            console.log("File database saved into Chrome Storage")
+        }
+    });
+    
+}
 
 document.getElementById("reset").addEventListener('click', function() {reset()}) // Add reset button
 function reset() {
     localStorage.clear()
     console.log("Local Storage Cleared")
+
+    chrome.storage.local.clear() // Clear Chrome Storage
+    console.log("Chrome Storage Cleared")
     location.reload()
 }

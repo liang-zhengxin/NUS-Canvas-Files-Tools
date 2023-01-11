@@ -1,5 +1,7 @@
 # NUS Canvas Files Tools
 
+__Current Version:  1.1 (Updated 11 Jan 2023)__
+
 LumiNUS used to have a feature that allow us to download files not yet downloaded. This chrome extension add this functionality into Canvas Files.
 
 This chrome extension has been tested on Chrome and Edge browsers.
@@ -15,5 +17,10 @@ The basic operation of this extension is as follows:
 *Cavets: Only files that are downloaded by clicking the download button at extension page will be recorded. This record is stored locally on the broswer using localStorage.*
 
 Feel free to add on this project by opening a pull request.
+
+Features:
+1. Show all files not yet downloaded.
+2. Notifications badges at course page
+3. Ability to mark files as downloaded without actually downloading the file.
 
 __DISCLAIMER: USE THIS EXTENSION AT YOUR OWN RISK. DO NOT RUN CODE YOU DO NOT UNDERSTAND__
