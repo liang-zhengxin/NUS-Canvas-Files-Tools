@@ -1,5 +1,7 @@
 # NUS Canvas Files Tools
 
+__Update: As at 18 May 2024, this project has been discontinued.__
+
 __Current Version:  1.1 (Updated 11 Jan 2023)__
 
 LumiNUS used to have a feature that allow us to download files not yet downloaded. This chrome extension add this functionality into Canvas Files.
